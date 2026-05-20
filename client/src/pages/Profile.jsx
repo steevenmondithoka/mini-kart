@@ -34,17 +34,38 @@ const Profile = () => {
   const authHeaders = { headers: { Authorization: `Bearer ${user?.token}` } };
 
   /* ── Avatar file → base64 ──────────────────────────────────── */
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('error', 'Image must be under 2MB');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => setAvatar(reader.result);
-    reader.readAsDataURL(file);
+ const handleAvatarChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('error', 'Image must be under 5MB');
+    return;
+  }
+
+  // Compress image before converting to base64
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // Max 400x400 pixels
+      const MAX = 400;
+      let w = img.width;
+      let h = img.height;
+      if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+      else        { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+      canvas.width  = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      // Compress to JPEG at 70% quality
+      const compressed = canvas.toDataURL('image/jpeg', 0.7);
+      setAvatar(compressed);
+    };
+    img.src = reader.result;
   };
+  reader.readAsDataURL(file);
+};
 
   /* ── Save ──────────────────────────────────────────────────── */
   const handleSave = async () => {
