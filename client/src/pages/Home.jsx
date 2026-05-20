@@ -538,9 +538,7 @@ const Home = () => {
         <AnimatePresence>{toast && <Toast message={toast} onDone={() => setToast(null)}/>}</AnimatePresence>
 
         {/* Marquee */}
-        <Marquee items={['Free Shipping ₹999+','New 2026 Archive','30-Day Returns','Secure Checkout','Members Early Access']}/>
-
-        {/* Banner */}
+       {/* Banner */}
         {!q && <Banner onShop={() => document.getElementById('shop')?.scrollIntoView({ behavior:'smooth' })}/>}
 
         {/* Trust */}
