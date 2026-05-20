@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
-const API = 'http://localhost:5000/api/cart';
+const API = `${import.meta.env.VITE_API_BASE_URL}/cart`; // ← fixed
 
 const authHeaders = (token) => ({
   headers: { Authorization: `Bearer ${token}` },
@@ -40,7 +40,7 @@ export const CartProvider = ({ children }) => {
 
   // ── Add to cart ──────────────────────────────────────────────
   const addToCart = async (product, qty = 1) => {
-    if (!user?.token) return; // guard: caller should show LoginPromptModal
+    if (!user?.token) return;
     try {
       const { data } = await axios.post(
         API,
@@ -100,8 +100,8 @@ export const CartProvider = ({ children }) => {
   };
 
   // ── Derived values ───────────────────────────────────────────
-  const cartCount       = cartItems.reduce((sum, i) => sum + i.qty, 0);
-  const cartTotal       = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const cartCount = cartItems.reduce((sum, i) => sum + i.qty, 0);
+  const cartTotal = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
 
   return (
     <CartContext.Provider value={{
