@@ -85,7 +85,7 @@ exports.updateUserProfile = async (req, res) => {
     const updated = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updateFields },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).select('-password');
 
     if (!updated) return res.status(404).json({ message: 'User not found' });
@@ -111,17 +111,17 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user) {
-      // Don't reveal if email exists
-      return res.json({ message: 'If that email exists, a reset link has been sent.' });
-    }
+    // Respond immediately — don't make user wait
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
 
-    // Generate raw token and its hash
-    const rawToken   = crypto.randomBytes(32).toString('hex');
+    // If no user, stop here (response already sent)
+    if (!user) return;
+
+    // Generate token and save to DB
+    const rawToken    = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiry     = Date.now() + 15 * 60 * 1000; // 15 minutes
+    const expiry      = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-    // Save hash directly — NO user.save() → avoids pre-save hook entirely
     await User.findByIdAndUpdate(user._id, {
       $set: {
         resetPasswordToken:  hashedToken,
@@ -129,13 +129,17 @@ exports.forgotPassword = async (req, res) => {
       },
     });
 
+    // Send email in background — user already got the response
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${rawToken}`;
-    await sendResetEmail(user.email, user.name, resetUrl);
+    sendResetEmail(user.email, user.name, resetUrl)
+      .catch(err => console.error('Email send failed:', err));
 
-    res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (err) {
     console.error('Forgot password error:', err);
-    res.status(500).json({ message: 'Email could not be sent. Please try again.' });
+    // Only send error if response hasn't been sent yet
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Something went wrong. Please try again.' });
+    }
   }
 };
 
@@ -161,7 +165,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters.' });
     }
 
-    // Hash manually and update directly — NO user.save() → avoids pre-save hook
     const salt       = await bcrypt.genSalt(10);
     const hashedPass = await bcrypt.hash(password, salt);
 
