@@ -1,18 +1,7 @@
 // utils/emailService.js
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Strip all spaces from App Password (Gmail shows it with spaces but it works without)
-const emailPass = (process.env.EMAIL_PASS || '').replace(/\s/g, '');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // use SSL
-  auth: {
-    user: "steevemondithoka@gmail.com",
-    pass: "rrnpqavblwprnkwe",
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * sendResetEmail
@@ -21,8 +10,8 @@ const transporter = nodemailer.createTransport({
  * @param {string} link  - full reset URL
  */
 const sendResetEmail = async (to, name, link) => {
-  const mailOptions = {
-    from: `"MINIKART" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from:    'MINIKART <onboarding@resend.dev>', // use this until you verify a domain
     to,
     subject: 'Reset Your MINIKART Password',
     html: `
@@ -56,9 +45,7 @@ const sendResetEmail = async (to, name, link) => {
         </p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
 module.exports = { sendResetEmail };
