@@ -10,6 +10,7 @@ import { ProtectedRoute, AdminRoute } from './components/ProtectedRoutes';
 
 // Pages
 import Home from './pages/Home';
+import CategoryPage from './pages/CategoryPage';
 import ProductDetails from './pages/ProductDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -34,6 +35,7 @@ function App() {
           <Routes>
             {/* ── Public ─────────────────────────────────────────── */}
             <Route path="/" element={<Home />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
