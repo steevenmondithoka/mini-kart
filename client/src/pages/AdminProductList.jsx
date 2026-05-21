@@ -27,7 +27,7 @@ const AdminProductList = () => {
         if (window.confirm("Remove this object from the archive?")) {
             try {
                 const config = { headers: { Authorization: `Bearer ${user.token}` } };
-                await axios.delete(`http://localhost:5000/api/products/${id}`, config);
+                await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/products/${id}`, config);
                 fetchProducts();
             } catch (err) {
                 alert("Error deleting product.");
@@ -41,7 +41,7 @@ const AdminProductList = () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${user.token}` } };
                 // We use a POST or DELETE with data for bulk operations
-                await axios.post(`http://localhost:5000/api/products/bulk-delete`, { ids: selectedIds }, config);
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/bulk-delete`, { ids: selectedIds }, config);
                 setSelectedIds([]);
                 fetchProducts();
                 alert("Selected items removed.");
